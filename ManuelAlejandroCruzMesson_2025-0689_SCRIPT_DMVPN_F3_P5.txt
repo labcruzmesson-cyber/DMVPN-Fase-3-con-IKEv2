@@ -1,0 +1,213 @@
+PEER A
+configure terminal
+interface GigabitEthernet0/0
+ ip address 10.0.0.60 255.255.255.0
+ ip nat outside
+ no shutdown
+!
+interface GigabitEthernet0/1
+ ip address 172.16.1.1 255.255.255.0
+ ip nat inside
+ no shutdown
+!
+ip route 0.0.0.0 0.0.0.0 10.0.0.1
+!
+ip access-list extended ACL_NAT_INTERNET
+ permit ip 172.16.1.0 0.0.0.255 any
+exit
+ip nat inside source list ACL_NAT_INTERNET interface GigabitEthernet0/0 overload
+!
+crypto ikev2 proposal DMVPN_PROP
+ encryption aes-cbc-256
+ integrity sha256
+ group 14
+exit
+!
+crypto ikev2 policy DMVPN_POL
+ proposal DMVPN_PROP
+exit
+!
+crypto ikev2 keyring DMVPN_KEY
+ peer ALL
+  address 0.0.0.0 0.0.0.0
+  pre-shared-key local cisco123
+  pre-shared-key remote cisco123
+ exit
+exit
+!
+crypto ikev2 profile DMVPN_PROF
+ match identity remote address 0.0.0.0
+ authentication local pre-share
+ authentication remote pre-share
+ keyring local DMVPN_KEY
+exit
+!
+crypto ipsec transform-set TS esp-aes 256 esp-sha256-hmac
+ mode transport
+exit
+!
+crypto ipsec profile DMVPN_IPS_PROF
+ set transform-set TS
+ set ikev2-profile DMVPN_PROF
+exit
+!
+interface Tunnel0
+ ip address 192.168.100.1 255.255.255.0
+ no ip split-horizon eigrp 100
+ ip nhrp map multicast dynamic
+ ip nhrp network-id 1
+ ip nhrp redirect
+ tunnel source GigabitEthernet0/0
+ tunnel mode gre multipoint
+ tunnel protection ipsec profile DMVPN_IPS_PROF
+exit
+!
+router eigrp 100
+ network 192.168.100.0 0.0.0.255
+ network 172.16.1.0 0.0.0.255
+exit
+
+
+
+
+
+PEER B
+configure terminal
+interface GigabitEthernet0/0
+ ip address 10.0.0.70 255.255.255.0
+ ip nat outside
+ no shutdown
+!
+interface GigabitEthernet0/1
+ ip address 172.16.2.1 255.255.255.0
+ ip nat inside
+ no shutdown
+!
+ip route 0.0.0.0 0.0.0.0 10.0.0.1
+!
+ip access-list extended ACL_NAT_INTERNET
+ permit ip 172.16.2.0 0.0.0.255 any
+exit
+ip nat inside source list ACL_NAT_INTERNET interface GigabitEthernet0/0 overload
+!
+crypto ikev2 proposal DMVPN_PROP
+ encryption aes-cbc-256
+ integrity sha256
+ group 14
+exit
+!
+crypto ikev2 policy DMVPN_POL
+ proposal DMVPN_PROP
+exit
+!
+crypto ikev2 keyring DMVPN_KEY
+ peer ALL
+  address 0.0.0.0 0.0.0.0
+  pre-shared-key local cisco123
+  pre-shared-key remote cisco123
+ exit
+exit
+!
+crypto ikev2 profile DMVPN_PROF
+ match identity remote address 0.0.0.0
+ authentication local pre-share
+ authentication remote pre-share
+ keyring local DMVPN_KEY
+exit
+!
+crypto ipsec transform-set TS esp-aes 256 esp-sha256-hmac
+ mode transport
+exit
+!
+crypto ipsec profile DMVPN_IPS_PROF
+ set transform-set TS
+ set ikev2-profile DMVPN_PROF
+exit
+!
+interface Tunnel0
+ ip address 192.168.100.2 255.255.255.0
+ ip nhrp network-id 1
+ ip nhrp shortcut
+ ip nhrp map 192.168.100.1 10.0.0.60
+ ip nhrp map multicast 10.0.0.60
+ ip nhrp nhs 192.168.100.1
+ tunnel source GigabitEthernet0/0
+ tunnel mode gre multipoint
+ tunnel protection ipsec profile DMVPN_IPS_PROF
+exit
+!
+router eigrp 100
+ network 192.168.100.0 0.0.0.255
+ network 172.16.2.0 0.0.0.255
+exit
+
+
+PEER C
+configure terminal
+interface GigabitEthernet0/0
+ ip address 10.0.0.80 255.255.255.0
+ ip nat outside
+ no shutdown
+!
+interface GigabitEthernet0/1
+ ip address 172.16.3.1 255.255.255.0
+ ip nat inside
+ no shutdown
+!
+ip route 0.0.0.0 0.0.0.0 10.0.0.1
+!
+ip access-list extended ACL_NAT_INTERNET
+ permit ip 172.16.3.0 0.0.0.255 any
+exit
+ip nat inside source list ACL_NAT_INTERNET interface GigabitEthernet0/0 overload
+!
+crypto ikev2 proposal DMVPN_PROP
+ encryption aes-cbc-256
+ integrity sha256
+ group 14
+exit
+!
+crypto ikev2 policy DMVPN_POL
+ proposal DMVPN_PROP
+exit
+!
+crypto ikev2 keyring DMVPN_KEY
+ peer ALL
+  address 0.0.0.0 0.0.0.0
+  pre-shared-key local cisco123
+  pre-shared-key remote cisco123
+ exit
+exit
+!
+crypto ikev2 profile DMVPN_PROF
+ match identity remote address 0.0.0.0
+ authentication local pre-share
+ authentication remote pre-share
+ keyring local DMVPN_KEY
+exit
+!
+crypto ipsec transform-set TS esp-aes 256 esp-sha256-hmac
+ mode transport
+exit
+!
+crypto ipsec profile DMVPN_IPS_PROF
+ set transform-set TS
+ set ikev2-profile DMVPN_PROF
+exit
+!
+interface Tunnel0
+ ip address 192.168.100.3 255.255.255.0
+ ip nhrp network-id 1
+ ip nhrp shortcut
+ ip nhrp map 192.168.100.1 10.0.0.60
+ ip nhrp map multicast 10.0.0.60
+ ip nhrp nhs 192.168.100.1
+ tunnel source GigabitEthernet0/0
+ tunnel mode gre multipoint
+ tunnel protection ipsec profile DMVPN_IPS_PROF
+exit
+!
+router eigrp 100
+ network 192.168.100.0 0.0.0.255
+ network 172.16.3.0 0.0.0.255
+exit
